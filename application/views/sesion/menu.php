@@ -1,0 +1,1 @@
+<div id="informacion" class="current">Ingrese su usuario y contrase&ntilde;a para iniciar sesi&oacute;n.</div>

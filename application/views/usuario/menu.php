@@ -1,0 +1,1 @@
+<div id="informacion" class="current">No modifique los campos <b>Password</b> y <b>Repita password</b> a menos de que desee cambiar su contrase&ntilde;a.</div>
