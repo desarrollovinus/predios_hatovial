@@ -37,7 +37,7 @@ class Archivos_controller extends CI_Controller
 	function __construct()
 	{
 		//se hereda el constructor del controlador padre
-		parent::__construct();	
+		parent::__construct();
 		//si el usuario no esta logueado
 		if($this->session->userdata('id_usuario') != TRUE)
 		{
@@ -86,7 +86,7 @@ class Archivos_controller extends CI_Controller
 				//sino entonces se crea la ruta con todos los permisos
 				@mkdir($this->ruta_archivos.$ficha, 0777);
 			}
-				
+
 			//se abre el directorio
 			if($directorio = opendir($this->ruta_archivos.$ficha))
 			{
@@ -95,18 +95,19 @@ class Archivos_controller extends CI_Controller
 				//se lee archivo por archivo
 				while(($file = readdir($directorio)) !== FALSE)
 				{
-					if($file != '.' && $file != '..' && $file != 'fotos')
+					if(strpos($file, '.') !== false && $file != '.' && $file != '..')
 					{
 						//se guardan los nombres en el array
 						array_push($nombres, $file);
-					}						
+					}
 				}
-				
+
 				//se cierra el directorio
 				closedir();
 				//se carga la libreria que permite establecer el browser con el que se abrio la pagina
 				$this->load->library('user_agent');
 				//se establecen las variables que van a la vista
+				$this->data['ficha'] = $ficha;
 				$this->data['es_ie'] = $this->agent->is_browser('Internet Explorer');
 				$this->data['archivos'] = $nombres;
 				$this->data['directorio'] = $this->ruta_archivos.$ficha;
@@ -116,8 +117,18 @@ class Archivos_controller extends CI_Controller
 				//se carga la vista
 				$this->load->view('includes/template',$this->data);
 			}
-		}	
+		}
 	}
+
+	function eliminar_archivo() {
+		unlink($this->input->post('directorio').'/'.$this->input->post('archivo'));
+		$auditoria = array(
+			'fecha_hora' => date('Y-m-d H:i:s', time()),
+			'id_usuario' => $this->session->userdata('id_usuario'),
+			'descripcion' => 'Se Elimina el archivo '.$this->input->post('archivo').' de la ficha '.$this->input->post('ficha')
+		);
+		$this->db->insert('auditoria', $auditoria);
+  }
 	/**
 	 * Metodo encargado de ofrecer una vista desde los controladores de actualizaciones de fichas prediales y actas
 	 */
@@ -130,29 +141,29 @@ class Archivos_controller extends CI_Controller
 		if( ! isset($permisos['Actas']['Consultar']) ) {
 			$this->data['titulo_pagina'] = "Archivos - ficha predial $ficha";
 		}
-		
+
 		if( ! is_dir($this->ruta_archivos.$ficha) )
 		{
 			@mkdir($this->ruta_archivos.$ficha, 0777);
 		}
-			
+
 		//se abre el directorio
 		if($directorio = opendir($this->ruta_archivos.$ficha))
 		{
 			//se arma un array de nombres de archivo
 			$nombres = array();
-			
+
 			while(($file = readdir($directorio)) !== FALSE)
 			{
 				if($file != '.' && $file != '..' && $file != 'fotos')
 				{
 					array_push($nombres, $file);
-				}						
+				}
 			}
-			
+
 			//se cierra el directorio
 			closedir();
-			
+
 			$this->load->library('user_agent');
 			$this->data['es_ie'] = $this->agent->is_browser('Internet Explorer');
 			$this->data['archivos'] = $nombres;
@@ -163,7 +174,7 @@ class Archivos_controller extends CI_Controller
 			$this->load->view('archivos/vista_auxiliar',$this->data);
 		}
 	}
-	
+
 	function ver_fotos()
 	{
 		$ficha = $this->uri->segment(3);
@@ -181,24 +192,24 @@ class Archivos_controller extends CI_Controller
 			{
 				@mkdir($this->ruta_archivos.$ficha.'/'.$this->nombre_carpeta_fotos, 0777);
 			}
-				
+
 			//se abre el directorio
 			if($directorio = opendir($this->ruta_archivos.$ficha.'/'.$this->nombre_carpeta_fotos))
 			{
 				//se arma un array de nombres de archivo
 				$nombres = array();
-				
+
 				while(($file = readdir($directorio)) !== FALSE)
 				{
 					if($file != '.' && $file != '..')
 					{
 						array_push($nombres, $file);
-					}						
+					}
 				}
-				
+
 				//se cierra el directorio
 				closedir();
-				
+
 				$this->load->library('user_agent');
 				$this->data['es_ie'] = $this->agent->is_browser('Internet Explorer');
 				$this->data['fotos'] = $nombres;
@@ -208,9 +219,9 @@ class Archivos_controller extends CI_Controller
 				$this->data['contenido_principal'] = 'archivos/fotos_view';
 				$this->load->view('includes/template',$this->data);
 			}
-		}	
+		}
 	}
-	
+
 	function subir_archivos()
 	{
 		$permisos = $this->session->userdata('permisos');
@@ -220,27 +231,27 @@ class Archivos_controller extends CI_Controller
 		}
 		$carpeta = $this->ruta_archivos.str_replace(' ','_', $this->uri->segment(3));
 		$resultado = "correcto";
-		
+
 		if(isset($_FILES['archivos'])) {
 			foreach ($_FILES['archivos']['error'] as $key => $error) {
 				if ($error == UPLOAD_ERR_OK) {
 					$tmp_name = $_FILES['archivos']['tmp_name'][$key];
 					$name = $_FILES['archivos']['name'][$key];
-					
+
 					if( ! move_uploaded_file($tmp_name, $carpeta.'/'.$name))
 					{
 						$resultado = "Ocurri&oacute; un error al subir los ficheros, verifique por favor.";
 					}
 				}
 			}
-			
+
 			echo $resultado;
 		}
 		else {
 			echo "Debe seleccionar al menos un archivo";
 		}
 	}
-	
+
 	function subir_fotos()
 	{
 		$permisos = $this->session->userdata('permisos');
@@ -250,30 +261,30 @@ class Archivos_controller extends CI_Controller
 		}
 		$carpeta = $this->ruta_archivos.str_replace(' ','_', $this->uri->segment(3)).'/'.$this->nombre_carpeta_fotos;
 		$resultado = "correcto";
-		
+
 		if(isset($_FILES['fotos'])) {
 			foreach ($_FILES['fotos']['error'] as $key => $error) {
 				if ($error == UPLOAD_ERR_OK) {
 					$tmp_name = $_FILES['fotos']['tmp_name'][$key];
 					$name = $_FILES['fotos']['name'][$key];
-					
+
 					if( ! move_uploaded_file($tmp_name, $carpeta.'/'.$name))
 					{
 						$resultado = "Ocurri&oacute; un error al subir las fotos, verifique por favor.";
 					}
 				}
 			}
-			
+
 			echo $resultado;
 		}
 		else {
 			echo "Debe seleccionar al menos una foto";
 		}
 	}
-	
+
 	function obtener_fotos() {
 		$ficha = $this->uri->segment(3);
-		
+
 			if( ! is_dir($this->ruta_archivos.$ficha) )
 		{
 			@mkdir($this->ruta_archivos.$ficha, 0777);
@@ -282,24 +293,24 @@ class Archivos_controller extends CI_Controller
 		{
 			@mkdir($this->ruta_archivos.$ficha.'/'.$this->nombre_carpeta_fotos, 0777);
 		}
-			
+
 		//se abre el directorio
 		if($directorio = opendir($this->ruta_archivos.$ficha.'/'.$this->nombre_carpeta_fotos))
 		{
 			//se arma un array de nombres de archivo
 			$nombres = array();
-			
+
 			while(($file = readdir($directorio)) !== FALSE)
 			{
 				if($file != '.' && $file != '..')
 				{
 					array_push($nombres, $file);
-				}						
+				}
 			}
-			
+
 			//se cierra el directorio
 			closedir();
-			
+
 			$this->load->library('user_agent');
 			$this->data['es_ie'] = $this->agent->is_browser('Internet Explorer');
 			$this->data['fotos'] = $nombres;
