@@ -1,6 +1,6 @@
 <?php 
 /**
- * Clase encargada de controlar las operaciones sobre las actas prediales
+ * Clase encargada de controlar las operaciones sobre las actas prediales (Cambio de prueba)
  * @author Freddy Alexander Vivas Reyes
  * @copyright 2012
  */
